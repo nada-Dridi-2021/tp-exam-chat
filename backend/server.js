@@ -5,9 +5,32 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-let messages = [
-    { author: "Système", content: "Bienvenue dans le chat DevOps !", timestamp: new Date() }
-];
+let messages = [];
+
+// ✅ Route racine pour Render
+app.get('/', (req, res) => {
+    res.json({
+        service: 'Chat Backend API',
+        status: 'running',
+        endpoints: {
+            getMessages: 'GET /api/messages',
+            addMessage: 'POST /api/messages',
+            docs: '/api'
+        }
+    });
+});
+
+// ✅ Route info API
+app.get('/api', (req, res) => {
+    res.json({
+        message: 'Chat API',
+        version: '1.0.0',
+        endpoints: [
+            'GET /api/messages - Get all messages',
+            'POST /api/messages - Add a new message'
+        ]
+    });
+});
 
 // GET /api/messages
 app.get('/api/messages', (req, res) => {
@@ -22,7 +45,6 @@ app.post('/api/messages', (req, res) => {
     }
     const newMessage = { author, content, timestamp: new Date() };
     messages.push(newMessage);
-    if (messages.length > 50) messages = messages.slice(-50); // garder les 50 derniers
     res.status(201).json(newMessage);
 });
 
