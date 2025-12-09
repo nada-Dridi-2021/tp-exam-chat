@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Chat DevOps</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .chat-box {
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            background: #e3f2fd;
+        }
+        .author {
+            font-weight: bold;
+            color: #1976d2;
+        }
+        .time {
+            font-size: 0.8em;
+            color: #666;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .chat-box { height: 300px; }
+        }
+    </style>
+</head>
+<body>
+    <h1>💬 Mini Chat DevOps</h1>
+    
+    <div>
+        <input type="text" id="author" placeholder="Ton pseudo" value="Anonyme">
+        <input type="text" id="content" placeholder="Ton message">
+        <button onclick="sendMessage()">Envoyer</button>
+        <button onclick="refreshMessages()">🔄 Rafraîchir</button>
+    </div>
+
+    <div class="chat-box" id="chatBox">
+        <!-- Messages apparaissent ici -->
+    </div>
+
+    <script>
+        const BACKEND_URL = "https://votre-backend-render.onrender.com";
+
+        function formatTime(date) {
+            return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        async function fetchMessages() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/messages`);
+                const messages = await res.json();
+                const chatBox = document.getElementById('chatBox');
+                chatBox.innerHTML = '';
+                messages.forEach(msg => {
+                    const time = new Date(msg.timestamp || Date.now());
+                    chatBox.innerHTML += `
+                        <div class="message">
+                            <span class="author">${msg.author}</span> : ${msg.content}
+                            <br><span class="time">${formatTime(time)}</span>
+                        </div>
+                    `;
+                });
+                chatBox.scrollTop = chatBox.scrollHeight;
+            } catch (error) {
+                console.error('Erreur de récupération des messages:', error);
+            }
+        }
+
+        async function sendMessage() {
+            const author = document.getElementById('author').value || 'Anonyme';
+            const content = document.getElementById('content').value;
+            if (!content.trim()) return;
+
+            await fetch(`${BACKEND_URL}/api/messages`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ author, content })
+            });
+
+            document.getElementById('content').value = '';
+            await fetchMessages();
+        }
+
+        function refreshMessages() {
+            fetchMessages();
+        }
+
+        // Rafraîchissement automatique toutes les 4 secondes
+        setInterval(fetchMessages, 4000);
+        fetchMessages();
+    </script>
+</body>
+</html>
